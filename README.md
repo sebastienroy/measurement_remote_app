@@ -9,13 +9,13 @@ So that, the user will be easily able to make statistics, mean value, mean devia
 # Interface requirements
 - The application shall be able to read measurements events data from a remote tool, using the USB interface.  
 - The application shall be able to read measurement data stream that follows json format with content such as following:
-
+```
     {
     "eventType": "shutterOpenTime",
     "value": 12.345,
     "unit": "millisecond"
     }
-    
+ ```
 # Minimum Valuable Product (MVP)
 - The application is able to connect to a remote tool through USB port and read the measurements stream
 - The application is able to gather lists of measurements and display them
