@@ -2,7 +2,7 @@
 An application that reads and displays the measurement values of a remote tool.
 
 # Context
-The idea of the project is to create an applicatin that can be interfaced with measurement tools such as the Baby Shutter Tester.  
+The idea of the project is to create an application that can be interfaced with measurement tools such as the Baby Shutter Tester.  
 The value of such an application is to help the user to enter series of measurement values into a spreadsheet application.
 So that, the user will be easily able to make statistics, mean value, mean deviation and so on, and also make archives of the measurements results.
 
