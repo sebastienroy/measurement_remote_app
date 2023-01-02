@@ -7,15 +7,17 @@ The value of such an application is to help the user to enter series of measurem
 So that, the user will be easily able to make statistics, mean value, mean deviation and so on, and also make archives of the measurements results.
 
 # Interface requirements
-- The application shall be able to read measurements events data from a remote tool, using the USB interface.  
+- The application shall be able to read measurements events data from a remote tool, using the USB interface as a serial data interface.  
 - The application shall be able to read measurement data stream that follows json format with content such as following:
 ```
     {
     "eventType": "shutterOpenTime",
-    "value": 12.345,
-    "unit": "millisecond"
+    "value": 1234,
+    "unit": "microsecond"
     }
  ```
+ - The application shall ignore data from the stream that is not in json format
+ - The application shall ignore data from the stream that contains no relevant or incomplete information
 # Minimum Valuable Product (MVP)
 - The application is able to connect to a remote tool through USB port and read the measurements stream
 - The application is able to gather lists of measurements and display them
