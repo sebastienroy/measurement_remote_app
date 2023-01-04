@@ -14,8 +14,10 @@ So that, the user will be easily able to make statistics, mean value, mean devia
     "eventType": "shutterOpenTime",
     "value": 1234,
     "unit": "microsecond"
+    "calibration": -48
     }
  ```
+ *NB: the data are streamed in a single line, each of them separated by LINE_FEED characters. The above example is represented multiline for readability purpose* 
  - The application shall ignore data from the stream that is not in json format
  - The application shall ignore data from the stream that contains no relevant or incomplete information
 # Minimum Valuable Product (MVP)
