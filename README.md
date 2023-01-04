@@ -13,7 +13,7 @@ So that, the user will be easily able to make statistics, mean value, mean devia
     {
     "eventType": "shutterOpenTime",
     "value": 1234,
-    "unit": "microsecond"
+    "unit": "microsecond",
     "calibration": -48
     }
  ```
