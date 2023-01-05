@@ -5,6 +5,7 @@ import json
 from json import JSONDecodeError
 from tkinter import *
 from  tkinter import ttk
+import serial.tools.list_ports
 
 ws = Tk()
 comque= queue.Queue()
@@ -81,10 +82,18 @@ def dataEvent(event):
 
 
 def main():
+
+    # test on COM ports
+    # Needs : pip install pyserial
+    ports = []
+    for port in serial.tools.list_ports.comports():
+        ports.append(port.name)
+    print(ports)
+
     ws.title("Measurement Remote Application")
-    ws.geometry("500x200")	
+    ws.geometry("400x200")	
     frame = Frame(ws, name="mainFrame")
-    frame.pack()
+    frame.pack(expand=True, fill='both')
     
     #scrollbar
     v_scroll = Scrollbar(frame, name = "v_scroll")
@@ -97,16 +106,16 @@ def main():
     tree['columns'] = ('id', 'duration', 'speed')
 
     tree.column("#0", width=0,  stretch=NO)
-    tree.column("id",anchor=CENTER, width=80)
-    tree.column("duration",anchor=CENTER,width=120)
-    tree.column("speed",anchor=CENTER,width=160)
+    tree.column("id",anchor=CENTER, width=80, stretch = YES)
+    tree.column("duration",anchor=CENTER,width=120, stretch = YES)
+    tree.column("speed",anchor=CENTER,width=160, stretch = YES)
 
     tree.heading("#0",text="",anchor=CENTER)
     tree.heading("id",text="Id",anchor=CENTER)
     tree.heading("duration",text="Time (microseconds)",anchor=CENTER)
     tree.heading("speed",text="Speed (1/s)",anchor=CENTER)
     
-    tree.pack()
+    tree.pack(expand=True, fill='both')
     v_scroll.config(command=tree.yview)
 
     Thr=threading.Thread(target=testMeasureThread)
