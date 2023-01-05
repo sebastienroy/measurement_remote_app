@@ -81,7 +81,14 @@ def dataEvent(event):
         # only one event type for the moment
 
 def clearAll():
-    print("All lines cleared")
+    global measureId
+    # Clear treeView table
+    tree = ws.nametowidget("mainFrame.measureTable")
+    tree.delete(*tree.get_children())
+    # Clear document
+    document.clear()
+    # Reset counter
+    measureId = 0
 
 def main():
 
@@ -99,13 +106,15 @@ def main():
     
     #scrollbar
     v_scroll = Scrollbar(frame, name = "v_scroll")
-    v_scroll.pack(side=RIGHT, fill=Y)
     
     # There is something to do here to put many buttons in a row
     #Label(frame, textvariable=clcvar, width=50).pack(pady=10)
-    Button(frame, text="Clear all", command=clearAll).pack(pady=10, anchor=W, ipadx=10)
+    Button(frame, text="Clear all", command=clearAll).pack(padx=10, pady=10, anchor=W, ipadx=10)
 
-    tree = ttk.Treeview(frame, yscrollcommand=v_scroll.set, name = "measureTable")
+    tree = ttk.Treeview(frame, name = "measureTable")
+    tree.config(yscrollcommand=v_scroll.set)
+    v_scroll.pack(side=RIGHT, fill=Y)
+    
     tree['columns'] = ('id', 'duration', 'speed')
 
     tree.column("#0", width=0,  stretch=NO)
@@ -118,7 +127,7 @@ def main():
     tree.heading("duration",text="Time (microseconds)",anchor=CENTER)
     tree.heading("speed",text="Speed (1/s)",anchor=CENTER)
     
-    tree.pack(expand=True, fill='both')
+    tree.pack(expand=True, fill='both', padx=2, pady=2)
     v_scroll.config(command=tree.yview)
 
     # start event pump
@@ -130,4 +139,3 @@ def main():
     ws.mainloop()
     
 main()
-
