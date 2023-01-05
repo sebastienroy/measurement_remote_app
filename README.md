@@ -24,7 +24,6 @@ So that, the user will be easily able to make statistics, mean value, mean devia
 - The application is able to connect to a remote tool through USB port and read the measurements stream
 - The application is able to gather lists of measurements and display them
 - The user is able to export lists of measures into main spreadsheet applications
-- The user is able to delete a single measure
 - The user is able to clear all the measures
 
 # Non functional requirements
