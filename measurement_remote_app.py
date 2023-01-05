@@ -80,6 +80,8 @@ def dataEvent(event):
         handleShutterOpenTimeEvent(data)
         # only one event type for the moment
 
+def clearAll():
+    print("All lines cleared")
 
 def main():
 
@@ -98,10 +100,11 @@ def main():
     #scrollbar
     v_scroll = Scrollbar(frame, name = "v_scroll")
     v_scroll.pack(side=RIGHT, fill=Y)
-     
-    #Label(frame, textvariable=clcvar, width=50).pack(pady=10)
-    ws.bind('<<Measure>>', dataEvent)
     
+    # There is something to do here to put many buttons in a row
+    #Label(frame, textvariable=clcvar, width=50).pack(pady=10)
+    Button(frame, text="Clear all", command=clearAll).pack(pady=10, anchor=W, ipadx=10)
+
     tree = ttk.Treeview(frame, yscrollcommand=v_scroll.set, name = "measureTable")
     tree['columns'] = ('id', 'duration', 'speed')
 
@@ -117,6 +120,9 @@ def main():
     
     tree.pack(expand=True, fill='both')
     v_scroll.config(command=tree.yview)
+
+    # start event pump
+    ws.bind('<<Measure>>', dataEvent)
 
     Thr=threading.Thread(target=testMeasureThread)
     Thr.start()
