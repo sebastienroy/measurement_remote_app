@@ -6,14 +6,16 @@ from json import JSONDecodeError
 from tkinter import *
 from  tkinter import ttk
 import serial.tools.list_ports
+import datetime
 
+# global variable are not very beautiful, but acceptable in a small application 
 ws = Tk()
 comque= queue.Queue()
-clcvar = StringVar()
 document = []
 measureId = 0
 
 def testMeasureThread():
+    """ Test listener used as a mock for COM port listener """
     index = 0
     currentId = 0
     entries = ['Tagada tsouin', 
@@ -45,9 +47,12 @@ def testMeasureThread():
             index = 0
 
 def handleShutterOpenTimeEvent(data):
+    """ Handler for shutterOpenTime event"""
     # compute derived data
     value = data['value']
     if value !=0:
+        # assumes that the value is expressed using microsecond unit
+        # speed is expressed as s-1
         speed = 1000000.0/value
     else:
         speed = NaN
@@ -57,16 +62,13 @@ def handleShutterOpenTimeEvent(data):
     document.append(data)
     # append new data in the table
     unit = data['unit']
-    #clcvar.set(str(comque.get()))
-    #clcvar.set(eventType + ';' + str(value) + ';' + unit)
     tree = ws.nametowidget("mainFrame.measureTable")
     item = tree.insert(parent='', index='end', iid=data['id'],text='', values=(str(data['id']),str(value),str(speed)))
     tree.see(item)
     tree.pack()
 
-    
-            
 def dataEvent(event):
+    """ Dispatches the events received from the listener """
     global measureId
     # get event data
     data = comque.get()
@@ -81,6 +83,7 @@ def dataEvent(event):
         # only one event type for the moment
 
 def clearAll():
+    """ Callback used to clear all entries """
     global measureId
     # Clear treeView table
     tree = ws.nametowidget("mainFrame.measureTable")
@@ -90,10 +93,52 @@ def clearAll():
     # Reset counter
     measureId = 0
 
+def string_out( rows, separator='\t', line_feed='\n'):
+    """ Prepares a string to send to the clipboard. """
+    out = []
+    for row in rows:
+        out.append( separator.join( row ))  # Use '\t' (tab) as column seperator.
+    return line_feed.join(out)              # Use '\n' (newline) as row seperator.
+
+def documentToLists():
+    """ Get the document data and metadata into a list of lists (rows/columns)"""
+    data = []
+    # Metadata
+    temp = []
+    temp.append("Baby Shutter Tester data exported from Measurement Remote Application")
+    data.append(temp)
+    temp = []
+    temp.append("https://github.com/sebastienroy/measurement_remote_app")
+    data.append(temp)
+    temp = []
+    temp.append("Date :")
+    temp.append(str(datetime.datetime.now()))
+    data.append(temp)
+    # Columns header
+    headers = []
+    headers.append("Id")
+    headers.append("Time (microseconds)")
+    headers.append("Speed (1/s)")
+    data.append(headers)
+    
+    for row in document:
+        temp = []
+        temp.append(str(row['id']))
+        temp.append(str(row['value']))
+        temp.append(str(row['speed']))
+        data.append(temp)
+        
+    return data
+    
 def copyToClipboard():
-    print("copyToClipboard() called")
+    """ Copies all metadata and data to the clipboard. """
+    data = documentToLists()
+    ws.clipboard_clear()
+    ws.clipboard_append(string_out(data, separator='\t'))     # Paste string to the clipboard
+    ws.update()   # The string stays on the clipboard after the window is closed
 
 def main():
+    """ defining a main function is not necessary but cleaner """
 
     # test on COM ports
     # Needs : pip install pyserial
@@ -107,20 +152,15 @@ def main():
     frame = Frame(ws, name="mainFrame")
     frame.pack(expand=True, fill='both')
 
- 
     #scrollbar
     v_scroll = Scrollbar(frame, name = "v_scroll")
     
     # There is something to do here to put many buttons in a row
-    #Label(frame, textvariable=clcvar, width=50).pack(pady=10)
     button_frame = Frame(frame, name="buttonFrame")
     button_frame.pack(expand=True, fill='both')
 
-    #Button(button_frame, text="Clear all", command=clearAll).pack(padx=10, pady=10, anchor=W, ipadx=10)
-    #Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).pack(padx=10, pady=10, anchor=E, ipadx=10)
     Button(button_frame, text="Clear all", command=clearAll).grid(row=0, column=0, padx=5, pady=5)
     Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).grid(row=0, column=1, padx=5, pady=5)
-
 
     tree = ttk.Treeview(frame, name = "measureTable")
     tree.config(yscrollcommand=v_scroll.set)
@@ -150,4 +190,3 @@ def main():
     ws.mainloop()
     
 main()
-
