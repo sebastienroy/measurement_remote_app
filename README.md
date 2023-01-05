@@ -21,10 +21,10 @@ So that, the user will be easily able to make statistics, mean value, mean devia
  - The application shall ignore data from the stream that is not in json format
  - The application shall ignore data from the stream that contains no relevant or incomplete information
 # Minimum Valuable Product (MVP)
-- The application is able to connect to a remote tool through USB port and read the measurements stream
-- The application is able to gather lists of measurements and display them
-- The user is able to export lists of measures into main spreadsheet applications
-- The user is able to clear all the measures
+- [ ] The application is able to connect to a remote tool through USB port and read the measurements stream
+- [x] The application is able to gather lists of measurements and display them
+- [x] The user is able to export lists of measures into main spreadsheet applications
+- [x] The user is able to clear all the measures
 
 # Non functional requirements
 The non fonctional requirements that drive architectural design are the following:
