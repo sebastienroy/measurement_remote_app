@@ -90,6 +90,9 @@ def clearAll():
     # Reset counter
     measureId = 0
 
+def copyToClipboard():
+    print("copyToClipboard() called")
+
 def main():
 
     # test on COM ports
@@ -103,13 +106,21 @@ def main():
     ws.geometry("400x200")	
     frame = Frame(ws, name="mainFrame")
     frame.pack(expand=True, fill='both')
-    
+
+ 
     #scrollbar
     v_scroll = Scrollbar(frame, name = "v_scroll")
     
     # There is something to do here to put many buttons in a row
     #Label(frame, textvariable=clcvar, width=50).pack(pady=10)
-    Button(frame, text="Clear all", command=clearAll).pack(padx=10, pady=10, anchor=W, ipadx=10)
+    button_frame = Frame(frame, name="buttonFrame")
+    button_frame.pack(expand=True, fill='both')
+
+    #Button(button_frame, text="Clear all", command=clearAll).pack(padx=10, pady=10, anchor=W, ipadx=10)
+    #Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).pack(padx=10, pady=10, anchor=E, ipadx=10)
+    Button(button_frame, text="Clear all", command=clearAll).grid(row=0, column=0, padx=5, pady=5)
+    Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).grid(row=0, column=1, padx=5, pady=5)
+
 
     tree = ttk.Treeview(frame, name = "measureTable")
     tree.config(yscrollcommand=v_scroll.set)
@@ -139,3 +150,4 @@ def main():
     ws.mainloop()
     
 main()
+
