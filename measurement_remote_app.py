@@ -6,6 +6,7 @@ from json import JSONDecodeError
 from tkinter import *
 from  tkinter import ttk
 import serial.tools.list_ports
+from serial import SerialException
 import datetime
 
 # global variable are not very beautiful, but acceptable in a small application 
@@ -13,6 +14,8 @@ ws = Tk()
 comque= queue.Queue()
 document = []
 measureId = 0
+serialPort = None
+portName = ''
 
 def testMeasureThread():
     """ Test listener used as a mock for COM port listener """
@@ -46,6 +49,37 @@ def testMeasureThread():
         if (index>= len(entries)):
             index = 0
 
+def openSerialPort():
+    """ Open default serial port
+        If no serial port name has been defined, open the first port available
+    """
+    global serialPort, portName
+    ports = serial.tools.list_ports.comports()
+    if(len(ports) > 0):
+        serialPort = serial.Serial(ports[0].name)
+        portName = serialPort.name
+
+def measureThread():
+    while 1:
+        if(serialPort == None or serialPort.is_open == False):
+            time.sleep(1)
+            openSerialPort()
+        if(serialPort != None and serialPort.is_open):
+            line = serialPort.readline()
+            try:
+                data = json.loads(line)
+                # Put a data in the queue
+                comque.put(data)
+                # Generate an event in order to notify the GUI
+                ws.event_generate('<<Measure>>', when='tail')       
+            except JSONDecodeError:
+                print("JSONDecodeError:" + str(line))
+            except SerialException:
+                print("Communication error")
+            except TclError:
+                break  
+
+
 def handleShutterOpenTimeEvent(data):
     """ Handler for shutterOpenTime event"""
     # compute derived data
@@ -55,7 +89,7 @@ def handleShutterOpenTimeEvent(data):
         # speed is expressed as s-1
         speed = 1000000.0/value
     else:
-        speed = NaN
+        speed = 'NaN'
     data['speed'] = speed
     
     # append measurement data to the document
@@ -137,6 +171,10 @@ def copyToClipboard():
     ws.clipboard_append(string_out(data, separator='\t'))     # Paste string to the clipboard
     ws.update()   # The string stays on the clipboard after the window is closed
 
+def configureDlg():
+    """ Allows the user to confure the communication port"""
+    print("ConfigureDlg() called")
+
 def main():
     """ defining a main function is not necessary but cleaner """
 
@@ -144,6 +182,7 @@ def main():
     # Needs : pip install pyserial
     ports = []
     for port in serial.tools.list_ports.comports():
+        print(port)
         ports.append(port.name)
     print(ports)
 
@@ -184,7 +223,8 @@ def main():
     # start event pump
     ws.bind('<<Measure>>', dataEvent)
 
-    Thr=threading.Thread(target=testMeasureThread)
+    #Thr=threading.Thread(target=testMeasureThread)
+    Thr=threading.Thread(target=measureThread)
     Thr.start()
 
     ws.mainloop()
