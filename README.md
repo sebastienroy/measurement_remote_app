@@ -35,3 +35,14 @@ The non fonctional requirements that drive architectural design are the followin
 - Language is Python3 : mainstream language, interpreted -> easy to develop
 - GUI technology : TkInter (no need of additional libraries) -> easy to deploy
 - Design pattern Model View Controler (MVC): robustness, modularity -> easy to extend
+
+# Usage
+- Install Python3
+- Install pyserial library
+```
+pip3 install pyserial
+```
+Launch script
+```
+python3 measurement_remote_app.py
+```
