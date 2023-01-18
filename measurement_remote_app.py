@@ -50,22 +50,34 @@ def testMeasureThread():
         if (index>= len(entries)):
             index = 0
 
-def openSerialPort():
+def openSerialPort(name):
     """ Open default serial port
         If no serial port name has been defined, open the first port available
     """
     global serialPort, portName
+    if(portName == '--'):
+        return
+    for info in serial.tools.list_ports.comports():
+        if info.name == portName:
+            serialPort = serial.Serial(info.device)
+
+        
+def listSerialPorts():
+    portNames=[]
     ports = serial.tools.list_ports.comports()
-    if(len(ports) > 0):
-        serialPort = serial.Serial(ports[0].name)
-        portName = serialPort.name
+    for port in ports:
+        portNames.append(port.name)
+    if not ports:
+        ports.append("--")
+    return portNames
 
 def measureThread():
+    global portName
     try:
         while 1:
             if(serialPort == None or serialPort.is_open == False):
                 time.sleep(1)
-                openSerialPort()
+                openSerialPort(portName)
             if(serialPort != None and serialPort.is_open):
                 line = serialPort.readline()
                 try:
@@ -102,7 +114,7 @@ def handleShutterOpenTimeEvent(data):
     # append new data in the table
     unit = data['unit']
     tree = ws.nametowidget("mainFrame.measureTable")
-    item = tree.insert(parent='', index='end', iid=data['id'],text='', values=(str(data['id']),str(value),str(speed)))
+    item = tree.insert(parent='', index='end', iid=data['id'],text='', values=(str(data['id']),str(value),"{:0.1f}".format(speed)))
     tree.see(item)
     tree.pack()
 
@@ -187,10 +199,12 @@ def on_closing():
 
 def main():
     """ defining a main function is not necessary but cleaner """
+    
+    global portName
 
     ws.protocol("WM_DELETE_WINDOW", on_closing)
     ws.title("Measurement Remote Application")
-    ws.geometry("400x200")	
+    ws.geometry("550x200")	
     frame = Frame(ws, name="mainFrame")
     frame.pack(expand=True, fill='both')
 
@@ -204,7 +218,14 @@ def main():
     Button(button_frame, text="Clear all", command=clearAll).grid(row=0, column=0, padx=5, pady=5)
     Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).grid(row=0, column=1, padx=5, pady=5)
     Label(button_frame, text="Device :").grid(row=0, column=2, padx=5, pady=5)
-    combo = ttk.Combobox(button_frame, values=('COM1', 'COM2', 'COM3'), state='readonly').grid(row=0, column=3, padx=5, pady=5)
+    combo = ttk.Combobox(button_frame, state='readonly', width=8)
+    ports=listSerialPorts()
+    portName = ports[0]
+    combo['values']=ports
+    combo.current(0)
+    combo.grid(row=0, column=3, padx=5, pady=5)
+    
+    Label(button_frame, text="Connection status").grid(row=0, column=4, padx=5, pady=5)
 
     tree = ttk.Treeview(frame, name = "measureTable")
     tree.config(yscrollcommand=v_scroll.set)
@@ -228,10 +249,11 @@ def main():
     # start event pump
     ws.bind('<<Measure>>', dataEvent)
 
-    Thr=threading.Thread(target=testMeasureThread)
-    #Thr=threading.Thread(target=measureThread)
+    #Thr=threading.Thread(target=testMeasureThread)
+    Thr=threading.Thread(target=measureThread)
     Thr.start()
 
     ws.mainloop()
     
 main()
+
