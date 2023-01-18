@@ -16,6 +16,7 @@ document = []
 measureId = 0
 serialPort = None
 portName = ''
+#Thr = None
 
 def testMeasureThread():
     """ Test listener used as a mock for COM port listener """
@@ -60,24 +61,28 @@ def openSerialPort():
         portName = serialPort.name
 
 def measureThread():
-    while 1:
-        if(serialPort == None or serialPort.is_open == False):
-            time.sleep(1)
-            openSerialPort()
-        if(serialPort != None and serialPort.is_open):
-            line = serialPort.readline()
-            try:
-                data = json.loads(line)
-                # Put a data in the queue
-                comque.put(data)
-                # Generate an event in order to notify the GUI
-                ws.event_generate('<<Measure>>', when='tail')       
-            except JSONDecodeError:
-                print("JSONDecodeError:" + str(line))
-            except SerialException:
-                print("Communication error")
-            except TclError:
-                break  
+    try:
+        while 1:
+            if(serialPort == None or serialPort.is_open == False):
+                time.sleep(1)
+                openSerialPort()
+            if(serialPort != None and serialPort.is_open):
+                line = serialPort.readline()
+                try:
+                    data = json.loads(line)
+                    # Put a data in the queue
+                    comque.put(data)
+                    # Generate an event in order to notify the GUI
+                    ws.event_generate('<<Measure>>', when='tail')       
+                except JSONDecodeError:
+                    print("JSONDecodeError:" + str(line))
+                except SerialException:
+                    print("Communication error")
+                except TclError:
+                    break  
+    finally:
+        print("Ended")
+            
 
 
 def handleShutterOpenTimeEvent(data):
@@ -172,20 +177,18 @@ def copyToClipboard():
     ws.update()   # The string stays on the clipboard after the window is closed
 
 def configureDlg():
-    """ Allows the user to confure the communication port"""
+    """ Allows the user to configure the communication port"""
     print("ConfigureDlg() called")
+    
+def on_closing():
+    """ Close ports, exit threads... """
+    ws.destroy()
+    exit()
 
 def main():
     """ defining a main function is not necessary but cleaner """
 
-    # test on COM ports
-    # Needs : pip install pyserial
-    ports = []
-    for port in serial.tools.list_ports.comports():
-        print(port)
-        ports.append(port.name)
-    print(ports)
-
+    ws.protocol("WM_DELETE_WINDOW", on_closing)
     ws.title("Measurement Remote Application")
     ws.geometry("400x200")	
     frame = Frame(ws, name="mainFrame")
@@ -200,6 +203,8 @@ def main():
 
     Button(button_frame, text="Clear all", command=clearAll).grid(row=0, column=0, padx=5, pady=5)
     Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).grid(row=0, column=1, padx=5, pady=5)
+    Label(button_frame, text="Device :").grid(row=0, column=2, padx=5, pady=5)
+    combo = ttk.Combobox(button_frame, values=('COM1', 'COM2', 'COM3'), state='readonly').grid(row=0, column=3, padx=5, pady=5)
 
     tree = ttk.Treeview(frame, name = "measureTable")
     tree.config(yscrollcommand=v_scroll.set)
@@ -223,8 +228,8 @@ def main():
     # start event pump
     ws.bind('<<Measure>>', dataEvent)
 
-    #Thr=threading.Thread(target=testMeasureThread)
-    Thr=threading.Thread(target=measureThread)
+    Thr=threading.Thread(target=testMeasureThread)
+    #Thr=threading.Thread(target=measureThread)
     Thr.start()
 
     ws.mainloop()
