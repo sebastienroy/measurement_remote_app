@@ -60,10 +60,11 @@ def openSerialPort(name):
     for info in serial.tools.list_ports.comports():
         if info.name == portName:
             serialPort = serial.Serial(info.device)
-
-        
+            break
+     
 def listSerialPorts():
     portNames=[]
+    # todo : check portNames = [info.name in serial.tools.list_ports.comports()]
     ports = serial.tools.list_ports.comports()
     for port in ports:
         portNames.append(port.name)
