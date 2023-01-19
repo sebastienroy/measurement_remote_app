@@ -2,11 +2,13 @@ import threading
 import time
 import queue
 import json
+import sys
 from json import JSONDecodeError
 from tkinter import *
 from  tkinter import ttk
+#from serial import *
 import serial.tools.list_ports
-from serial import SerialException
+#from serial import SerialException
 import datetime
 
 # global variable are not very beautiful, but acceptable in a small application 
@@ -16,10 +18,12 @@ document = []
 measureId = 0
 serialPort = None
 portName = ''
+is_stopped = False
 #Thr = None
 
 def testMeasureThread():
     """ Test listener used as a mock for COM port listener """
+    global is_stopped
     index = 0
     currentId = 0
     entries = ['Tagada tsouin', 
@@ -34,7 +38,7 @@ def testMeasureThread():
         '{\"eventType\": \"shutterOpenTime\",\"value\": 4210987, \"unit\": \"microsecond\"}', 
         '{\"eventType\": \"shutterOpenTime\",\"value\": 54210987, \"unit\": \"microsecond\"}', 
         ''] 
-    while 1:
+    while not is_stopped:
         try:
             data = json.loads(entries[index])
             # Put a data in the queue
@@ -73,9 +77,9 @@ def listSerialPorts():
     return portNames
 
 def measureThread():
-    global portName
+    global portName, is_stopped
     try:
-        while 1:
+        while not is_stopped:
             if(serialPort == None or serialPort.is_open == False):
                 time.sleep(1)
                 openSerialPort(portName)
@@ -195,8 +199,12 @@ def configureDlg():
     
 def on_closing():
     """ Close ports, exit threads... """
+    global is_stopped
+    is_stopped = True
     ws.destroy()
-    exit()
+    if serialPort and serialPort.is_open:
+        serialPort.close()
+    sys.exit()
 
 def main():
     """ defining a main function is not necessary but cleaner """
