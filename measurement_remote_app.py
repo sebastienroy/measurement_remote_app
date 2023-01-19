@@ -69,7 +69,7 @@ def listSerialPorts():
     for port in ports:
         portNames.append(port.name)
     if not ports:
-        ports.append("--")
+        portNames.append("--")
     return portNames
 
 def measureThread():
