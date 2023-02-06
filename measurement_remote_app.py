@@ -1,3 +1,15 @@
+""" 
+    This tool is intended to be interfaced with measurement tools such as the Baby Shutter Tester.
+    The value of such an application is to help the user to enter series of measurement values 
+    into a spreadsheet application. 
+    So that, the user will be easily able to make statistics, mean value, mean deviation and so on,
+    and also make archives of the measurements results.
+"""
+__author__ = "Sebastien ROY"
+__license__ = "GPL"
+__version__ = "0.0.1"
+__status__ = "Development"
+
 import threading
 import time
 import queue
@@ -265,4 +277,3 @@ def main():
     ws.mainloop()
     
 main()
-
