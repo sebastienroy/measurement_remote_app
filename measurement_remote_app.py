@@ -20,7 +20,7 @@ from tkinter import *
 from  tkinter import ttk
 #from serial import *
 import serial.tools.list_ports
-#from serial import SerialException
+from serial import SerialException
 import datetime
 
 # global variable are not very beautiful, but acceptable in a small application 
@@ -31,6 +31,7 @@ measureId = 0
 serialPort = None
 portName = ''
 is_stopped = False
+connectionStatusLabel = None
 #Thr = None
 
 def testMeasureThread():
@@ -70,12 +71,15 @@ def openSerialPort(name):
     """ Open default serial port
         If no serial port name has been defined, open the first port available
     """
-    global serialPort, portName
+    global serialPort, portName, connectionStatusLabel
     if(portName == '--'):
         return
     for info in serial.tools.list_ports.comports():
         if info.name == portName:
+            connectionStatusLabel.set("Connecting...")
             serialPort = serial.Serial(info.device)
+            if(serialPort.is_open): 
+                connectionStatusLabel.set("Connected")
             break
      
 def listSerialPorts():
@@ -89,15 +93,16 @@ def listSerialPorts():
     return portNames
 
 def measureThread():
-    global portName, is_stopped
+    global portName, is_stopped, connectionStatusLabel
     try:
         while not is_stopped:
             if(serialPort == None or serialPort.is_open == False):
                 time.sleep(1)
                 openSerialPort(portName)
+            print("SerialPort" + str(serialPort))
             if(serialPort != None and serialPort.is_open):
-                line = serialPort.readline()
                 try:
+                    line = serialPort.readline()
                     data = json.loads(line)
                     # Put a data in the queue
                     comque.put(data)
@@ -106,6 +111,8 @@ def measureThread():
                 except JSONDecodeError:
                     print("JSONDecodeError:" + str(line))
                 except SerialException:
+                    connectionStatusLabel.set("Not connected")
+                    serialPort
                     print("Communication error")
                 except TclError:
                     break  
@@ -221,7 +228,7 @@ def on_closing():
 def main():
     """ defining a main function is not necessary but cleaner """
     
-    global portName
+    global portName, connectionStatusLabel
 
     ws.protocol("WM_DELETE_WINDOW", on_closing)
     ws.title("Measurement Remote Application")
@@ -246,7 +253,8 @@ def main():
     combo.current(0)
     combo.grid(row=0, column=3, padx=5, pady=5)
     
-    Label(button_frame, text="Connection status").grid(row=0, column=4, padx=5, pady=5)
+    connectionStatusLabel = StringVar(frame, "Unknown Status")
+    Label(button_frame, textvariable=connectionStatusLabel).grid(row=0, column=4, padx=5, pady=5)
 
     tree = ttk.Treeview(frame, name = "measureTable")
     tree.config(yscrollcommand=v_scroll.set)
