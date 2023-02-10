@@ -29,10 +29,13 @@ comque= queue.Queue()
 document = []
 measureId = 0
 serialPort = None
+serialPorts = {}
 portName = ''
 is_stopped = False
 selectedPort = StringVar()
 connectionStatusLabel = None
+combo = None
+
 #Thr = None
 
 def testMeasureThread():
@@ -68,19 +71,23 @@ def testMeasureThread():
         if (index>= len(entries)):
             index = 0
 
+
 def openSerialPort(name):
     """ Open default serial port
         If no serial port name has been defined, open the first port available
     """
-    global serialPort, portName, connectionStatusLabel
+    global serialPort, serialPorts, portName, connectionStatusLabel
     if(portName == '--'):
         serialPort = None
-        return
-    for info in serial.tools.list_ports.comports():
-        if info.name == portName:
-            connectionStatusLabel.set("Connecting...")
-            serialPort = serial.Serial(info.device)
-            
+    elif(name in serialPorts):
+        serialPort = serialPorts[name]
+    else:
+        for info in serial.tools.list_ports.comports():
+            if info.name == portName:
+                connectionStatusLabel.set("Connecting...")
+                serialPort = serial.Serial(info.device)
+                if(serialPort.is_open):
+                    serialPorts[portName] = serialPort          
      
 def listSerialPorts():
     portNames=[]
@@ -93,7 +100,7 @@ def listSerialPorts():
     return portNames
 
 def measureThread():
-    global portName, is_stopped, connectionStatusLabel
+    global portName, is_stopped, connectionStatusLabel, serialPort
     try:
         while not is_stopped:
             if(serialPort == None or serialPort.is_open == False):
@@ -120,6 +127,8 @@ def measureThread():
                 except SerialException:
                     connectionStatusLabel.set("Not connected")
                     print("Communication error")
+                    serialPort = None
+                    serialPorts.pop(portName)
                 except TclError:
                     print("TclError occured")
                 except TypeError:
@@ -240,19 +249,17 @@ def on_combo_selection(event):
     global portName, serialPort
     portName = selectedPort.get()
     print("Change port to : " + portName)
-    if(serialPort != None and serialPort.is_open):
-        serialPort.flush()
-        serialPort.flushInput()
-        serialPort.flushOutput()
-        serialPort.close()
-        connectionStatusLabel.set("Disconnected")
     openSerialPort(portName)    
 
+def update_cb_list():
+    global combo
+    list = listSerialPorts()
+    combo['values'] = list
 
 def main():
     """ defining a main function is not necessary but cleaner """
     
-    global portName, connectionStatusLabel
+    global portName, connectionStatusLabel, combo
 
     ws.protocol("WM_DELETE_WINDOW", on_closing)
     ws.title("Measurement Remote Application")
@@ -270,7 +277,7 @@ def main():
     Button(button_frame, text="Clear all", command=clearAll).grid(row=0, column=0, padx=5, pady=5)
     Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).grid(row=0, column=1, padx=5, pady=5)
     Label(button_frame, text="Device :").grid(row=0, column=2, padx=5, pady=5)
-    combo = ttk.Combobox(button_frame, textvariable = selectedPort, state='readonly', width=8)
+    combo = ttk.Combobox(button_frame, textvariable = selectedPort, state='readonly', width=8,  postcommand = update_cb_list)
     ports=listSerialPorts()
     portName = ports[0]
     combo['values']=ports
