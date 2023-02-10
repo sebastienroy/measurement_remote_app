@@ -31,6 +31,7 @@ measureId = 0
 serialPort = None
 portName = ''
 is_stopped = False
+selectedPort = StringVar()
 connectionStatusLabel = None
 #Thr = None
 
@@ -73,14 +74,13 @@ def openSerialPort(name):
     """
     global serialPort, portName, connectionStatusLabel
     if(portName == '--'):
+        serialPort = None
         return
     for info in serial.tools.list_ports.comports():
         if info.name == portName:
             connectionStatusLabel.set("Connecting...")
             serialPort = serial.Serial(info.device)
-            if(serialPort.is_open): 
-                connectionStatusLabel.set("Connected")
-            break
+            
      
 def listSerialPorts():
     portNames=[]
@@ -99,6 +99,13 @@ def measureThread():
             if(serialPort == None or serialPort.is_open == False):
                 time.sleep(1)
                 openSerialPort(portName)
+                if(serialPort == None):
+                    connectionStatusLabel.set("No connection")
+                elif(serialPort.is_open): 
+                    connectionStatusLabel.set("Connected") 
+                else:
+                    connectionStatusLabel.set("Disonnected")
+
             print("SerialPort" + str(serialPort))
             if(serialPort != None and serialPort.is_open):
                 try:
@@ -112,10 +119,13 @@ def measureThread():
                     print("JSONDecodeError:" + str(line))
                 except SerialException:
                     connectionStatusLabel.set("Not connected")
-                    serialPort
                     print("Communication error")
                 except TclError:
-                    break  
+                    print("TclError occured")
+                except TypeError:
+                    print("TypeError occured")
+                except Exception:
+                    print("Other error occured")
     finally:
         print("Ended")
             
@@ -225,6 +235,20 @@ def on_closing():
         serialPort.close()
     sys.exit()
 
+def on_combo_selection(event):
+    """ COM port selection Callback """
+    global portName, serialPort
+    portName = selectedPort.get()
+    print("Change port to : " + portName)
+    if(serialPort != None and serialPort.is_open):
+        serialPort.flush()
+        serialPort.flushInput()
+        serialPort.flushOutput()
+        serialPort.close()
+        connectionStatusLabel.set("Disconnected")
+    openSerialPort(portName)    
+
+
 def main():
     """ defining a main function is not necessary but cleaner """
     
@@ -246,11 +270,12 @@ def main():
     Button(button_frame, text="Clear all", command=clearAll).grid(row=0, column=0, padx=5, pady=5)
     Button(button_frame, text="Copy to Clipboard", command=copyToClipboard).grid(row=0, column=1, padx=5, pady=5)
     Label(button_frame, text="Device :").grid(row=0, column=2, padx=5, pady=5)
-    combo = ttk.Combobox(button_frame, state='readonly', width=8)
+    combo = ttk.Combobox(button_frame, textvariable = selectedPort, state='readonly', width=8)
     ports=listSerialPorts()
     portName = ports[0]
     combo['values']=ports
     combo.current(0)
+    combo.bind("<<ComboboxSelected>>", on_combo_selection)
     combo.grid(row=0, column=3, padx=5, pady=5)
     
     connectionStatusLabel = StringVar(frame, "Unknown Status")
