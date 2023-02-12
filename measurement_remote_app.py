@@ -35,11 +35,12 @@ is_stopped = False
 selectedPort = StringVar()
 connectionStatusLabel = None
 combo = None
-
-#Thr = None
+DEBUG = False
 
 def testMeasureThread():
-    """ Test listener used as a mock for COM port listener """
+    """ Test purpose:
+        Test listener used as a mock for COM port listener 
+    """
     global is_stopped
     index = 0
     currentId = 0
@@ -63,7 +64,8 @@ def testMeasureThread():
              # Generate an event in order to notify the GUI
             ws.event_generate('<<Measure>>', when='tail')       
         except JSONDecodeError:
-            print("JSONDecodeError:" + entries[index])
+            if(DEBUG):
+                print("Not JSon : " + entries[index])
         except TclError:
             break  
         time.sleep(1)
@@ -87,19 +89,23 @@ def openSerialPort(name):
                 connectionStatusLabel.set("Connecting...")
                 serialPort = serial.Serial(info.device)
                 if(serialPort.is_open):
-                    serialPorts[portName] = serialPort          
+                    serialPorts[portName] = serialPort   
+                    if(DEBUG):
+                        print("SerialPort : " + str(serialPort))       
      
 def listSerialPorts():
-    portNames=[]
-    # todo : check portNames = [info.name in serial.tools.list_ports.comports()]
-    ports = serial.tools.list_ports.comports()
-    for port in ports:
-        portNames.append(port.name)
-    if not ports:
+    """ All is in the title
+    """
+    portNames= [info.name for info in serial.tools.list_ports.comports()]
+    if not portNames:
         portNames.append("--")
     return portNames
 
 def measureThread():
+    """ This function is executed in a separated thread 
+        When JSon data is read on the serial port,
+        the function pushs a <<Measure>> event in a queue for the main thread
+    """
     global portName, is_stopped, connectionStatusLabel, serialPort
     try:
         while not is_stopped:
@@ -113,7 +119,6 @@ def measureThread():
                 else:
                     connectionStatusLabel.set("Disonnected")
 
-            print("SerialPort" + str(serialPort))
             if(serialPort != None and serialPort.is_open):
                 try:
                     line = serialPort.readline()
@@ -123,10 +128,11 @@ def measureThread():
                     # Generate an event in order to notify the GUI
                     ws.event_generate('<<Measure>>', when='tail')       
                 except JSONDecodeError:
-                    print("JSONDecodeError:" + str(line))
+                    if(DEBUG):
+                        print("Not formated data:" + str(line))
                 except SerialException:
+                    # Connection failed
                     connectionStatusLabel.set("Not connected")
-                    print("Communication error")
                     serialPort = None
                     serialPorts.pop(portName)
                 except TclError:
@@ -136,9 +142,8 @@ def measureThread():
                 except Exception:
                     print("Other error occured")
     finally:
-        print("Ended")
-            
-
+        if(DEBUG):
+            print("Measurement worker ended")
 
 def handleShutterOpenTimeEvent(data):
     """ Handler for shutterOpenTime event"""
@@ -149,7 +154,7 @@ def handleShutterOpenTimeEvent(data):
         # speed is expressed as s-1
         speed = 1000000.0/value
     else:
-        speed = 'NaN'
+        speed = -1
     data['speed'] = speed
     
     # append measurement data to the document
@@ -174,6 +179,7 @@ def dataEvent(event):
     eventType = data['eventType']
     if(eventType == 'shutterOpenTime'):
         handleShutterOpenTimeEvent(data)
+        print("Processed data event : " + str(data))
         # only one event type for the moment
 
 def clearAll():
@@ -195,33 +201,19 @@ def string_out( rows, separator='\t', line_feed='\n'):
     return line_feed.join(out)              # Use '\n' (newline) as row seperator.
 
 def documentToLists():
-    """ Get the document data and metadata into a list of lists (rows/columns)"""
+    """ Copy data to clipboard purpose:
+        Get the document data and metadata into a list of lists (rows/columns)
+    """
     data = []
     # Metadata
-    temp = []
-    temp.append("Baby Shutter Tester data exported from Measurement Remote Application")
-    data.append(temp)
-    temp = []
-    temp.append("https://github.com/sebastienroy/measurement_remote_app")
-    data.append(temp)
-    temp = []
-    temp.append("Date :")
-    temp.append(str(datetime.datetime.now()))
-    data.append(temp)
+    data.append(["Baby Shutter Tester data exported using Measurement Remote Application"])
+    data.append(["https://github.com/sebastienroy/measurement_remote_app"])
+    data.append(["Date :", str(datetime.datetime.now())])
     # Columns header
-    headers = []
-    headers.append("Id")
-    headers.append("Time (microseconds)")
-    headers.append("Speed (1/s)")
-    data.append(headers)
-    
+    data.append(["Id", "Time (microseconds)", "Speed (1/s)"])
+    # Data
     for row in document:
-        temp = []
-        temp.append(str(row['id']))
-        temp.append(str(row['value']))
-        temp.append(str(row['speed']))
-        data.append(temp)
-        
+        data.append([str(row['id']), str(row['value']), str(row['speed'])])        
     return data
     
 def copyToClipboard():
@@ -230,10 +222,6 @@ def copyToClipboard():
     ws.clipboard_clear()
     ws.clipboard_append(string_out(data, separator='\t'))     # Paste string to the clipboard
     ws.update()   # The string stays on the clipboard after the window is closed
-
-def configureDlg():
-    """ Allows the user to configure the communication port"""
-    print("ConfigureDlg() called")
     
 def on_closing():
     """ Close ports, exit threads... """
@@ -246,15 +234,15 @@ def on_closing():
 
 def on_combo_selection(event):
     """ COM port selection Callback """
-    global portName, serialPort
+    global portName
     portName = selectedPort.get()
-    print("Change port to : " + portName)
+    if(DEBUG):
+        print("Change port to : " + portName)
     openSerialPort(portName)    
 
 def update_cb_list():
     global combo
-    list = listSerialPorts()
-    combo['values'] = list
+    combo['values'] = listSerialPorts()
 
 def main():
     """ defining a main function is not necessary but cleaner """
@@ -270,7 +258,7 @@ def main():
     #scrollbar
     v_scroll = Scrollbar(frame, name = "v_scroll")
     
-    # There is something to do here to put many buttons in a row
+    # Button_fram is necessary to put many buttons in a row
     button_frame = Frame(frame, name="buttonFrame")
     button_frame.pack(expand=True, fill='both')
 
@@ -310,10 +298,12 @@ def main():
     # start event pump
     ws.bind('<<Measure>>', dataEvent)
 
+    # TEST : change the thread to start in order to generate test data
     #Thr=threading.Thread(target=testMeasureThread)
     Thr=threading.Thread(target=measureThread)
     Thr.start()
 
     ws.mainloop()
-    
-main()
+
+if __name__ == "__main__":    
+    main()
