@@ -11,10 +11,10 @@ So that, the user will be easily able to make statistics, mean value, mean devia
 - The application shall be able to read measurement data stream that follows json format with content such as following:
 ```
     {
-    "eventType": "shutterOpenTime",
-    "value": 1234,
-    "unit": "microsecond",
-    "calibration": -48
+    'eventType': 'shutterOpenTime', 
+    'value': 257197, 
+    'unit': 'microsecond', 
+    'calibrationValue': -40, 
     }
  ```
  *NB: the data are streamed in a single line, each of them separated by LINE_FEED characters. The above example is represented multiline for readability purpose* 
