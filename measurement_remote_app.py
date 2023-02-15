@@ -126,6 +126,7 @@ def measureThread():
                     # Put a data in the queue
                     comque.put(data)
                     # Generate an event in order to notify the GUI
+                    print("Processed data event : " + str(data))
                     ws.event_generate('<<Measure>>', when='tail')       
                 except JSONDecodeError:
                     if(DEBUG):
@@ -179,7 +180,6 @@ def dataEvent(event):
     eventType = data['eventType']
     if(eventType == 'shutterOpenTime'):
         handleShutterOpenTimeEvent(data)
-        print("Processed data event : " + str(data))
         # only one event type for the moment
 
 def clearAll():
