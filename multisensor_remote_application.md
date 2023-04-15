@@ -24,3 +24,19 @@ The user is then able to export  data in any datasheet application and perform f
     'topRightClose': 6789
     }
 ```
+
+# Displayed requirements
+
+- The application shall display to the user both processed data and raw data.  
+  
+- Global data  
+  - speed (central) = 1000/(centerClose-centerOpen)
+  - Exposure (central) = (centerClose-centerOpen)/1000
+  - 1st shutter course = abs(topRightOpen - bottomLeftOpen)
+  - 1st shutter course extrapolation to full frame
+  - 2nd shutter course = abs(topRightClose - bottomLeftClose)
+  - 2nd shutter course extrapolation to full frame  
+  
+- Detailed data  
+  - Speed and exposure at bottomLeft and topRight corners
+  - half cours of 1st and 2nd shutters
