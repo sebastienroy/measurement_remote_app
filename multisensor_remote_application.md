@@ -10,9 +10,17 @@ The user is then able to export  data in any datasheet application and perform f
 
 # Interface Requirement
 - The application shall be able to read measurement data stream that follows json format with content such as following:
+- The application shall interpret the negative values as missing value (event not detected)
 ```
     {
-    'eventType': 'tbd', 
-    [tbd] 
+    'eventType': 'MultiSensorMeasure', 
+    'unit': 'microsecond', 
+    'firmware_version': '1.0.0',
+    'bottomLeftOpen': 0,
+    'bottomLeftClose': 987,
+    'centerOpen': 3456,
+    'centerClose': 4567,
+    'topRightOpen': 5678,
+    'topRightClose': 6789
     }
 ```
