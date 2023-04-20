@@ -8,10 +8,12 @@ Camera repairers may be intersted with the global result, i.e. the translation t
 This is the global philosophy of the tool : allow the user of the Multisensor Baby Shutter Tester to gather both synthetic and detailed result of measurements of the shutter speed of the tested camera.  
 The user is then able to export  data in any datasheet application and perform further processing or archivation processus.
 
-# Interface Requirement
+## Interface Requirement
+
 - The application shall be able to read measurement data stream that follows json format with content such as following:
 - The application shall interpret the negative values as missing value (event not detected)
-```
+
+```json
     {
     'eventType': 'MultiSensorMeasure', 
     'unit': 'microsecond', 
@@ -25,7 +27,7 @@ The user is then able to export  data in any datasheet application and perform f
     }
 ```
 
-# Displayed requirements
+## Displayed requirements
 
 - The application shall display to the user both processed data and raw data.  
   
